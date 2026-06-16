@@ -18,10 +18,8 @@ pipeline {
         
         stage('Generate Documentation') {
             steps {
-                echo 'Generando documentación con contenedor efímero...'
-                // Ejecutar Doxygen para generar la documentación a partir de comentarios en el código 
-                // Utilizamos ${WORKSPACE} que es la variable nativa de Jenkins para la ruta del proyecto
-                sh 'docker run --rm -v ${WORKSPACE}:/workspace -w /workspace ghcr.io/kingpin/doxygen-docker:latest doxygen Doxyfile'
+                echo 'Generando documentación...'
+                sh 'doxygen Doxyfile' 
             }
         }
         
