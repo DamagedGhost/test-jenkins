@@ -24,26 +24,28 @@ pipeline {
         }
         
         stage('Version Control') {
-            steps {
-                // Actualizar el repositorio de Git con la documentación generada 
-                echo 'Preparando commit con la nueva documentación...' 
-                
-                sh '''
-                    # Configurar la identidad de Git para este commit
-                    git config user.name "Jenkins Automator"
-                    git config user.email "jenkins@local"
-                    
-                    # Añadir la carpeta docs generada
-                    git add docs/
-                    
-                    # Hacer commit (el || echo evita que el pipeline falle si no hubo cambios en la docu)
-                    git commit -m "docs: Actualización automática de Doxygen" || echo "No hay cambios para commitear"
-                    
-                    # Subir los cambios a tu rama main
-                    git push origin HEAD:main
-                '''
-            }
-        }
+                    steps {
+                        echo 'Preparando commit con la nueva documentación...' 
+                        
+                        // Asegúrate de que 'github-token' sea el ID exacto que le pusiste a la credencial en Jenkins
+                        withCredentials([usernamePassword(credentialsId: 'github-token', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                            sh '''
+                                # Configurar la identidad de Git
+                                git config user.name "Jenkins Automator"
+                                git config user.email "jenkins@local"
+                                
+                                # Añadir la carpeta docs generada
+                                git add docs/
+                                
+                                # Hacer commit
+                                git commit -m "docs: Actualización automática de Doxygen" || echo "No hay cambios para commitear"
+                                
+                                # Hacer push usando las variables de entorno inyectadas
+                                git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/DamagedGhost/test-jenkins.git HEAD:main
+                            '''
+                        }
+                    }
+                }
         
         stage('Deploy') {
             steps {
