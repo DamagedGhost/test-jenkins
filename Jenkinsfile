@@ -28,7 +28,7 @@ pipeline {
                         echo 'Preparando commit con la nueva documentación...' 
                         
                         // Asegúrate de que 'github-token' sea el ID exacto que le pusiste a la credencial en Jenkins
-                        withCredentials([usernamePassword(credentialsId: 'github-token', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                        withCredentials([usernamePassword(credentialsId: 'Repo-Token', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
                             sh '''
                                 # Configurar la identidad de Git
                                 git config user.name "Jenkins Automator"
