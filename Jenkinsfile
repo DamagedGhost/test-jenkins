@@ -29,7 +29,7 @@ pipeline {
                 
                 // CAMBIO 2: Le decimos a ZAP que ataque el puerto 5001
                 sh '''
-                docker run --rm --network host -v $(pwd):/zap/wrk/:rw -t zaproxy/zap-stable zap-baseline.py -t http://localhost:5001 -r zap_report.html || true
+                docker run --rm -u root --network host -v $(pwd):/zap/wrk/:rw -t zaproxy/zap-stable zap-baseline.py -t http://localhost:5001 -r zap_report.html || true
                 '''
                 
                 echo 'Apagando entorno temporal de pruebas...'
