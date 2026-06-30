@@ -46,13 +46,16 @@ def home():
     return render_template_string(HTML_TEMPLATE, result="")
 
 ## @brief Ruta de búsqueda (VULNERABLE A XSS).
+#  @details Recibe un parámetro 'q' por URL y lo refleja directamente en el HTML sin sanitizar, permitiendo inyección de scripts.
 @app.route('/buscar')
 def buscar():
     REQUESTS.inc()
+    # Capturamos lo que el usuario escribió
     query = request.args.get('q', '')
-    # MITIGACIÓN: Usamos escape() para convertir caracteres peligrosos en texto seguro
-    query_seguro = escape(query)
-    mensaje = f"Resultados para la búsqueda: <b>{query_seguro}</b>" 
+    
+    # VULNERABILIDAD: Reflejamos el input directamente concatenado
+    mensaje = f"Resultados para la búsqueda: <b>{query}</b>" 
+    
     return render_template_string(HTML_TEMPLATE, result=mensaje)
 
 if __name__ == '__main__':
