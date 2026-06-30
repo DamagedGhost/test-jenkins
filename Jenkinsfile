@@ -25,7 +25,7 @@ pipeline {
                 
                 echo 'Ejecutando escaneo de vulnerabilidades con OWASP ZAP...'
                 sh '''
-                docker run --rm --network host -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-stable zap-baseline.py -t http://localhost:5000 -r zap_report.html || true
+                docker run --rm --network host -v $(pwd):/zap/wrk/:rw -t zaproxy/zap-stable zap-baseline.py -t http://localhost:5000 -r zap_report.html || true
                 '''
                 
                 echo 'Apagando entorno temporal de pruebas...'
