@@ -2,55 +2,81 @@ pipeline {
     agent any
     
     stages {
-        stage('Build') {
+        stage('Build & SCA') { 
+            // ETAPA: Construcción y Análisis de Composición de Software [cite: 160]
             steps {
-                // Compilar el código fuente [cite: 32]
-                echo 'Compilando el código fuente...' 
+                echo 'Instalando dependencias seguras...' 
+                // Usamos pipenv para instalar lo definido en Pipfile
+                sh 'pipenv install'
+                
+                echo 'Buscando vulnerabilidades en dependencias...'
+                // pipenv check escanea tus librerías contra una base de datos de vulnerabilidades [cite: 174]
+                // El "|| true" evita que el pipeline se rompa si encuentra un error de seguridad, 
+                // permitiendo que pase a la etapa de pruebas dinámicas.
+                sh 'pipenv check || true' 
             }
         }
         
-        stage('Test') {
+        stage('Test - OWASP ZAP') { 
+            // ETAPA: Pruebas Dinámicas (DAST) [cite: 166]
             steps {
-                // Ejecutar pruebas unitarias [cite: 33]
-                echo 'Ejecutando pruebas unitarias...' 
+                echo 'Levantando la aplicación temporal para pruebas dinámicas...'
+                sh 'docker build -t appsegura .'
+                sh 'docker run -d --name app_test -p 5000:5000 appsegura'
+                
+                echo 'Ejecutando escaneo de vulnerabilidades con OWASP ZAP...'
+                sh '''
+                docker run --rm --network host -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-stable zap-baseline.py -t http://localhost:5000 -r zap_report.html || true
+                '''
+                
+                echo 'Apagando entorno temporal de pruebas...'
+                sh 'docker stop app_test && docker rm app_test'
             }
         }
         
-        stage('Generate Documentation') {
+        stage('Generate Documentation') { 
+            // ETAPA: Generación de documentación [cite: 176, 177]
             steps {
-                echo 'Generando documentación...'
+                echo 'Generando documentación técnica automatizada...'
                 sh 'doxygen Doxyfile' 
             }
         }
         
-        stage('Version Control') {
-                    steps {
-                        echo 'Preparando commit con la nueva documentación...' 
-                        
-                        // Asegúrate de que 'github-token' sea el ID exacto que le pusiste a la credencial en Jenkins
-                        withCredentials([usernamePassword(credentialsId: 'Repo-Token', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-                            sh '''
-                                # Configurar la identidad de Git
-                                git config user.name "Jenkins Automator"
-                                git config user.email "jenkins@local"
-                                
-                                # Añadir la carpeta docs generada
-                                git add docs/
-                                
-                                # Hacer commit
-                                git commit -m "docs: Actualización automática de Doxygen" || echo "No hay cambios para commitear"
-                                
-                                # Hacer push usando las variables de entorno inyectadas
-                                git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/DamagedGhost/test-jenkins.git HEAD:main
-                            '''
-                        }
-                    }
-                }
-        
-        stage('Deploy') {
+        stage('Version Control') { 
+            // ETAPA: Control de versiones [cite: 177]
             steps {
-                // Desplegar la aplicación en un entorno de prueba [cite: 36]
-                echo 'Desplegando en entorno de prueba...' 
+                echo 'Preparando commit con la nueva documentación y reportes...' 
+                
+                withCredentials([usernamePassword(credentialsId: 'Repo-Token', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                    sh '''
+                        git config user.name "Jenkins Automator"
+                        git config user.email "jenkins@local"
+                        
+                        # Añadimos la documentación generada y el reporte de ZAP
+                        git add docs/
+                        git add zap_report.html || true
+                        
+                        git commit -m "docs/sec: Actualización Doxygen y reporte ZAP" || echo "No hay cambios para commitear"
+                        
+                        git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/DamagedGhost/test-jenkins.git HEAD:main
+                    '''
+                }
+            }
+        }
+        
+        stage('Deploy') { 
+            // ETAPA: Despliegue a Producción 
+            steps {
+                echo 'Desplegando la nueva versión con vulnerabilidades en producción...' 
+                
+                // Limpiamos cualquier versión anterior para evitar conflictos
+                sh 'docker stop appsegura || true'
+                sh 'docker rm appsegura || true'
+                
+                // Levantamos el contenedor final asegurando que:
+                // 1. Se llame 'appsegura' para que Prometheus lo encuentre
+                // 2. Se conecte a la red 'semana15_default' de tu docker-compose
+                sh 'docker run -d --name appsegura --network semana15_default -p 5000:5000 appsegura'
             }
         }
     }
