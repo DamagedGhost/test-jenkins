@@ -46,7 +46,7 @@ pipeline {
             steps {
                 echo 'Preparando commit con la nueva documentación y reportes...' 
                 
-                withCredentials([usernamePassword(credentialsId: 'Repo-Token', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                withCredentials([usernamePassword(credentialsId: 'REPO-TOKEN', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
                     sh '''
                         git config user.name "Jenkins Automator"
                         git config user.email "jenkins@local"
