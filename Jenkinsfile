@@ -3,16 +3,15 @@ pipeline {
     
     stages {
         stage('Build & SCA') { 
-            // ETAPA: Construcción y Análisis de Composición de Software [cite: 160]
+            // ETAPA: Construcción y Análisis de Composición de Software
             steps {
                 echo 'Instalando dependencias seguras...' 
-                // Usamos pipenv para instalar lo definido en Pipfile
+                // pipenv install: Instalar dependencias definidas en Pipfile.lock
                 sh 'pipenv install'
                 
                 echo 'Buscando vulnerabilidades en dependencias...'
-                // pipenv check escanea tus librerías contra una base de datos de vulnerabilidades [cite: 174]
-                // El "|| true" evita que el pipeline se rompa si encuentra un error de seguridad, 
-                // permitiendo que pase a la etapa de pruebas dinámicas.
+                // pipenv check: Analizar dependencias en busca de vulnerabilidades conocidas
+                // || true: Evitar que falle el pipeline si se encuentran vulnerabilidades
                 sh 'pipenv check || true' 
             }
         }
