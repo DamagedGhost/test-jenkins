@@ -2,6 +2,8 @@ from flask import Flask, request
 
 app = Flask(__name__)
 
+## @brief Inicia el servidor de la aplicación.
+#  @details Esta función arranca Flask en el puerto 5000.
 @app.route('/hello')
 def hello():
     """
