@@ -17,15 +17,19 @@ pipeline {
         }
         
         stage('Test - OWASP ZAP') { 
-            // ETAPA: Pruebas Dinámicas (DAST) [cite: 166]
+            // ETAPA: Pruebas Dinámicas (DAST)
             steps {
                 echo 'Levantando la aplicación temporal para pruebas dinámicas...'
                 sh 'docker build -t appsegura .'
-                sh 'docker run -d --name app_test -p 5000:5000 appsegura'
+                
+                // CAMBIO 1: Levantamos el contenedor de pruebas en el puerto 5001
+                sh 'docker run -d --name app_test -p 5001:5000 appsegura'
                 
                 echo 'Ejecutando escaneo de vulnerabilidades con OWASP ZAP...'
+                
+                // CAMBIO 2: Le decimos a ZAP que ataque el puerto 5001
                 sh '''
-                docker run --rm --network host -v $(pwd):/zap/wrk/:rw -t zaproxy/zap-stable zap-baseline.py -t http://localhost:5000 -r zap_report.html || true
+                docker run --rm --network host -v $(pwd):/zap/wrk/:rw -t zaproxy/zap-stable zap-baseline.py -t http://localhost:5001 -r zap_report.html || true
                 '''
                 
                 echo 'Apagando entorno temporal de pruebas...'
